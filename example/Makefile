@@ -20,4 +20,9 @@ fclean:
 
 re:
 	${MAKE} fclean
-	${MAKE}
+	${MAKE} run
+
+run:
+	./start_chessbot.sh
+
+

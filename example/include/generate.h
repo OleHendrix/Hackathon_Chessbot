@@ -26,6 +26,7 @@
 /*                                                                           */
 /* https://www.chessprogramming.org/Move_Generation                          */
 /* https://www.chessprogramming.org/Pseudo-Legal_Move                        */
+
 size_t generate_pseudo_legal_moves(const struct position *pos, struct move *moves);
 
 /* generate all legal moves and store them in `moves`, which must be large   */
@@ -41,5 +42,12 @@ size_t generate_pseudo_legal_moves(const struct position *pos, struct move *move
 /* https://www.chessprogramming.org/Check                                    */
 /* https://www.chessprogramming.org/Double_Check                             */
 size_t generate_legal_moves(const struct position *pos, struct move *moves);
+int add_offset(int square, int file_offset, int rank_offset);
+size_t generate_pawn_move(const struct position *pos, struct move *moves, int from_square, int to_square);
+size_t generate_pawn_capture(const struct position *pos, struct move *moves, int from_square, int file_offset, int rank_offset);
+size_t generate_simple_move(const struct position *pos, struct move *moves, int from_square, int file_offset, int rank_offset);
+size_t generate_sliding_move(const struct position *pos, struct move *moves, int from_square, int file_offset, int rank_offset);
+// size_t generate_pseudo_legal_moves(const struct position *pos, struct move *moves);
+
 
 #endif
