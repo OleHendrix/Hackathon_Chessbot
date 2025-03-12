@@ -1,15 +1,30 @@
-NAME	:= chessbot
-CFLAGS	:= -Wall -Wextra -pedantic -std=c99
-# CFLAGS := -Wall -Wextra -pedantic -std=c89 -O3 -flto -march=native
+NAME := chessbot
+CC := gcc
+CXX := g++
+CFLAGS := -Wall -Wextra -pedantic -std=c99
+CXXFLAGS := -Wall -Wextra -std=c++11
 
-HEADERS := include/uci.h include/perft.h include/search.h include/evaluate.h include/generate.h include/move.h include/position.h include/parse.h include/types.h
+HEADERS := include/uci.h include/perft.h include/search.h include/evaluate.h \
+           include/generate.h include/move.h include/position.h include/parse.h include/types.h include/zobrix_hash.h
+
+SRC_C := src/uci.c src/perft.c src/search.c src/evaluate.c src/generate.c src/move.c src/position.c src/parse.c src/main.c
+SRC_CPP := src/zobrix_hash.cpp 
+
+OBJ_C := $(SRC_C:src/%.c=build/%.o)
+OBJ_CPP := $(SRC_CPP:src/%.cpp=build/%.o)
+
+all: $(NAME)
 
 build/%.o: src/%.c $(HEADERS) Makefile
 	mkdir -p $(@D)
-	$(CC) $(CFLAGS) $< -o $@ -c -Iinclude
+	$(CC) $(CFLAGS) -c $< -o $@ -Iinclude
 
-$(NAME): build/uci.o build/perft.o build/search.o build/evaluate.o build/generate.o build/move.o build/position.o build/parse.o build/main.o
-	$(CC) $(CFLAGS) $^ -o $@
+build/%.o: src/%.cpp $(HEADERS) Makefile
+	mkdir -p $(@D)
+	$(CXX) $(CXXFLAGS) -c $< -o $@ -Iinclude
+
+$(NAME): $(OBJ_C) $(OBJ_CPP)
+	$(CXX) $(CXXFLAGS) $^ -o $@  # Gebruik g++ voor linking
 
 clean:
 	rm -rf build/
@@ -24,5 +39,3 @@ re:
 
 run:
 	./start_chessbot.sh
-
-

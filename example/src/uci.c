@@ -151,10 +151,25 @@ static void uci_go(const struct position *pos, char *token, char *store) {
 	printf("bestmove %s\n", buffer);
 }
 
+
+void initZobristTable(struct position *pos)
+{
+	srand(time(NULL));
+
+	for (int piece = 0; piece < 12; piece++)
+	{
+		for (int square = 0; square < 64; square++)
+			pos->zobrist_table[piece][square] = ((uint64_t)rand() << 32) | rand();
+	}
+}
+
 void uci_run(const char *name, const char *author) {
 	char *line;
 	int quit = 0;
 	struct position pos;
+
+	initZobristTable(&pos);
+
 
 	while (!quit && (line = get_line(stdin))) {
 		char *token = line;

@@ -2,6 +2,7 @@
 #define POSITION_H
 
 #include <stdio.h>
+#include <stdint.h>
 
 /* this struct represents the placement of pieces on a chess board, as well  */
 /* as any additional information such as side to move, castling rights, and  */
@@ -25,7 +26,8 @@
 /*                                                                           */
 /* https://www.chessprogramming.org/Board_Representation                     */
 /* https://www.chessprogramming.org/Bitboards                                */
-struct position {
+struct position
+{
 	/* pieces indexed by square. `NO_PIECE` is used for empty squares.       */
 	int board[64];
 
@@ -37,6 +39,8 @@ struct position {
 
 	/* en passant square, may be `NO_SQUARE`.                                */
 	int en_passant_square;
+
+	uint64_t zobrist_table[12][64];
 };
 
 /* print out information about the position. useful for debugging.           */
