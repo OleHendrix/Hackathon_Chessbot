@@ -179,8 +179,8 @@ void moveOrdering(const struct position *pos, struct move moves[], size_t count)
 		if ((FILE(moveToSquare) == 3 || FILE(moveToSquare) == 4) && (RANK(moveToSquare) == 3 || RANK(moveToSquare) == 4))
 			moves[i].moveScore += 5 * pieceValue;
 
-		// int availableMoveDifference = (int)(generate_legal_moves_per_piece_square(pos, moveToSquare) - generate_legal_moves_per_piece_square(pos, moveFromSquare));
-		// moves[i].moveScore += (5 * availableMoveDifference);
+		int availableMoveDifference = (int)(generate_legal_moves_per_piece_square(pos, moveToSquare) - generate_legal_moves_per_piece_square(pos, moveFromSquare));
+			moves[i].moveScore += (2 * availableMoveDifference);
 		//NADELEN
 	}
 	qsort(moves, count, sizeof(struct move), compareMoveScore);
@@ -234,7 +234,9 @@ struct search_result minimax(const struct position *pos, int depth, int alpha, i
 	if (depth == 0)
 	{
 		result.score = evaluate(pos, info);
-		// result.score = searchCaptures(pos, info, alpha, beta, info->pos->side_to_move);
+		if (pos->side_to_move == BLACK)
+			result.score = -result.score;
+		result.score = searchCaptures(pos, info, alpha, beta, info->pos->side_to_move);
 		return result;
 	}
 	struct move moves[MAX_MOVES];

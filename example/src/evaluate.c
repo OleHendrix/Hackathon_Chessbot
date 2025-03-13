@@ -6,27 +6,18 @@
 
 static const int piece_value[6] = { 100, 300, 300, 500, 900, 1000000 };
 
-uint64_t compute_zobrist_hash(const struct position *pos)
-{
-	uint64_t hash = 0;
-
-	for (int square = 0; square < 64; square++)
-	{
-		int piece = pos->board[square];
-
-		if (piece != NO_PIECE)
-			hash ^= pos->zobrist_table[piece][square];
-	}
-
-	return hash;
-}
-
 int evaluate(const struct position *pos, struct search_info *info)
 {
 	int score[2] = { 0, 0 };
 	int square;
 
-	for (square = 0; square < 64; square++) {
+	// u_int64_t hash = compute_zobrist_hash(pos);
+	// int storedscore;
+	// if (lookup_in_hashmap(hash, &storedscore))
+	// 	return storedscore;
+
+	for (square = 0; square < 64; square++)
+	{
 		int piece = pos->board[square];
 
 		if (piece != NO_PIECE)
@@ -36,8 +27,9 @@ int evaluate(const struct position *pos, struct search_info *info)
 		}
 	}
 
-
+	int evaluation = score[pos->side_to_move] - score[1 - pos->side_to_move];
+	// store_in_hashmap(hash, evaluation);
 
 	info->evaluatedPositions++;
-	return score[pos->side_to_move] - score[1 - pos->side_to_move];
+	return evaluation;
 }

@@ -3,12 +3,13 @@
 # Variabelen
 BOT_NAME="chessbot"
 BOT_PATH="$(pwd)/$BOT_NAME"  # Pad naar de bot executable
-CUTECHESS_GUI="/Applications/cutechess"  # Cute Chess pad
-CUTECHESS_CLI="/Applications/cutechess-cli"
+CUTECHESS_GUI="/Applications/cutechess"  # Cute Chess GUI pad
 
-# 1️⃣ Sluit Cute Chess als het al draait
-pkill -f CuteChess
-echo "Closed Cute Chess."
+# 1️⃣ Controleer of Cute Chess geïnstalleerd is
+if [ ! -f "$CUTECHESS_GUI" ]; then
+    echo "Cute Chess niet gevonden! Installeer het met: brew install cutechess"
+    exit 1
+fi
 
 # 2️⃣ Compileer de bot
 make
@@ -18,16 +19,19 @@ if [ $? -ne 0 ]; then
 fi
 echo "Build successful."
 
-open -a "$CUTECHESS_GUI"
+# 3️⃣ Controleer of de bot uitvoerbaar is
+if [ ! -x "$BOT_PATH" ]; then
+    echo "Bot is niet uitvoerbaar! Maak het uitvoerbaar met: chmod +x $BOT_PATH"
+    exit 1
+fi
 
-# 3️⃣ Laad de bot in Cute Chess
-# if [ -f "$CUTECHESS_CLI" ]; then
-#     echo "Starting a game..."
-#     "$CUTECHESS_CLI" \
-#     -engine name="Stockfish" cmd="/Users/olehendrix/Downloads/stockfish_2/stockfish-macos-x86-64" proto=uci \
-#     -engine name="$BOT_NAME" cmd="$BOT_PATH" proto=uci \
-#     -each tc=300/40 \
-#     -games 1 -rounds 1
-# else
-#     echo "Cute Chess CLI niet gevonden! Installeer het met: brew install cutechess"
-# fi
+# 4️⃣ Controleer of de bot UCI-output geeft
+echo "uci" | "$BOT_PATH"
+if [ $? -ne 0 ]; then
+    echo "Fout: Bot geeft geen geldige UCI-output. Controleer je implementatie."
+    exit 1
+fi
+
+# 5️⃣ Open Cute Chess GUI met jouw bot
+echo "Starting Cute Chess GUI..."
+open -a "$CUTECHESS_GUI" --args -engine name="$BOT_NAME" cmd="$BOT_PATH" proto=uci

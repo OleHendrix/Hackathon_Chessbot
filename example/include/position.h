@@ -40,7 +40,10 @@ struct position
 	/* en passant square, may be `NO_SQUARE`.                                */
 	int en_passant_square;
 
-	uint64_t zobrist_table[12][64];
+	uint64_t zobristTable[12][64];
+	uint64_t castlingRights[4]; // 4 castling rechten
+	uint64_t enPassantFile[8];	// 8 mogelijke kolommen voor en-passant
+	uint64_t blackToMove;
 };
 
 /* print out information about the position. useful for debugging.           */
@@ -51,5 +54,6 @@ void print_position(const struct position *pos, FILE *stream);
 /*                                                                           */
 /* https://www.chessprogramming.org/Forsyth-Edwards_Notation                 */
 int parse_position(struct position *pos, const char *fen);
+
 
 #endif

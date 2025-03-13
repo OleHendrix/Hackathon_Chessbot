@@ -5,7 +5,7 @@ CFLAGS := -Wall -Wextra -pedantic -std=c99
 CXXFLAGS := -Wall -Wextra -std=c++11
 
 HEADERS := include/uci.h include/perft.h include/search.h include/evaluate.h \
-           include/generate.h include/move.h include/position.h include/parse.h include/types.h include/zobrix_hash.h
+           include/generate.h include/move.h include/position.h include/parse.h include/types.h include/zobrix_hash.h include/random64.h
 
 SRC_C := src/uci.c src/perft.c src/search.c src/evaluate.c src/generate.c src/move.c src/position.c src/parse.c src/main.c
 SRC_CPP := src/zobrix_hash.cpp 

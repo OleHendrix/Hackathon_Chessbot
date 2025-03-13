@@ -2,12 +2,16 @@
 #include "search.h"
 #include "move.h"
 #include "types.h"
+#include "evaluate.h"
+#include "generate.h"
 
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
 #include <stdio.h>
 #include <time.h>
+#include "random64.h"
+#include "zobrix_hash.h"
 
 static char *get_line(FILE *stream) {
 	size_t capacity = 1024;
@@ -87,6 +91,71 @@ static void uci_position(struct position *pos, char *token, char *store) {
 	}
 }
 
+struct move polyglot_to_move(uint16_t poly_move, const struct position *pos)
+{
+	struct move best_move = {0};
+
+	int from = (poly_move >> 6) & 0x3F;		 // Extract 'from' square
+	int to = poly_move & 0x3F;				 // Extract 'to' square
+	int promotion = (poly_move >> 12) & 0xF; // Extract promotion piece type
+
+	struct move moves[MAX_MOVES];
+	size_t count = generate_legal_moves(pos, moves);
+
+	for (size_t i = 0; i < count; i++)
+	{
+		if (moves[i].from_square == from && moves[i].to_square == to)
+		{
+			// Controleer of het een promotiezet is
+			if (promotion != 0)
+			{
+				if (moves[i].promotion_type != promotion)
+					continue; // Ga door als promotie niet matcht
+			}
+
+			return moves[i]; // Correcte zet gevonden
+		}
+	}
+
+	return best_move; // Als niet gevonden, return lege move
+}
+
+void checkOpening(const struct position *pos)
+{
+	uint64_t hash = compute_zobrist_hash(pos);
+	printf("Current position hash: %llx\n", hash);
+	FILE *book = fopen("Book.bin", "rb");
+
+	if (!book)
+	{
+		printf("ERROR: Could not open Book.bin\n");
+		return;
+	}
+
+	struct book_entry entry;
+	struct move book_move = {0}; // Initialiseer lege zet
+	int found = 0;
+
+	while (fread(&entry, sizeof(struct book_entry), 1, book))
+	{
+		// printf("Checking book entry: %llx\n", entry.key) ;
+		if (entry.key == hash)
+		{
+			book_move = polyglot_to_move(entry.move, pos);
+			printf("Book move found: %d -> %d\n", book_move.from_square, book_move.to_square);
+			found = 1;
+			break;
+		}
+	}
+
+	fclose(book); // Zorg ervoor dat we het bestand altijd sluiten!
+
+	if (!found)
+	{
+		printf("No book move found for this position.\n");
+	}
+}
+
 static void uci_go(const struct position *pos, char *token, char *store) {
 	struct search_info info;
 	struct move move;
@@ -128,6 +197,8 @@ static void uci_go(const struct position *pos, char *token, char *store) {
 		}
 	}
 
+	// checkOpening(pos);
+
 	clock_t starttime = clock(); 
 	move = search(&info);
 	clock_t endtime = clock();
@@ -151,16 +222,33 @@ static void uci_go(const struct position *pos, char *token, char *store) {
 	printf("bestmove %s\n", buffer);
 }
 
-
 void initZobristTable(struct position *pos)
 {
-	srand(time(NULL));
+	int index = 0;
 
+	// Stukken per veld
 	for (int piece = 0; piece < 12; piece++)
 	{
 		for (int square = 0; square < 64; square++)
-			pos->zobrist_table[piece][square] = ((uint64_t)rand() << 32) | rand();
+		{
+			pos->zobristTable[piece][square] = Random64[index++];
+		}
 	}
+
+	// Rokade rechten
+	for (int i = 0; i < 4; i++)
+	{
+		pos->castlingRights[i] = Random64[index++];
+	}
+
+	// En-passant velden
+	for (int i = 0; i < 8; i++)
+	{
+		pos->enPassantFile[i] = Random64[index++];
+	}
+
+	// Zwart aan zet
+	pos->blackToMove = Random64[index++];
 }
 
 void uci_run(const char *name, const char *author) {
