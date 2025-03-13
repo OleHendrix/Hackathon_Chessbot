@@ -13,7 +13,7 @@ BUILD_DIR := build
 INCLUDE_DIR := include
 
 # Headerbestanden
-HEADERS := $(wildcard $(INCLUDE_DIR)/*.h) $(wildcard $(INCLUDE_DIR)/*.hpp)
+HEADERS := $(wildcard $(INCLUDE_DIR)/*.h)
 
 # Bronbestanden
 SRC_C := $(wildcard $(SRC_DIR)/*.c)
