@@ -40,7 +40,11 @@ struct position
 	/* en passant square, may be `NO_SQUARE`.                                */
 	int en_passant_square;
 
-	uint64_t zobrist_table[12][64];
+	uint64_t zobrist_pieces[12][64];	// [Piece type][Square]
+	uint64_t zobrist_castling_white[4]; // 16 possible castling rights
+	uint64_t zobrist_castling_black[4];
+	uint64_t zobrist_en_passant[8]; // 8 possible en passant files
+	uint64_t zobrist_side;
 };
 
 /* print out information about the position. useful for debugging.           */

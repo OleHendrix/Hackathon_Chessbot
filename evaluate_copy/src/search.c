@@ -2,6 +2,7 @@
 #include "evaluate.h"
 #include "generate.h"
 #include "types.h"
+// #include "move_depth.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -155,7 +156,6 @@ int compareMoveScore(const void *a, const void *b)
 	return (move_b->moveScore - move_a->moveScore);
 }
 
-
 int searchCaptures(const struct position *pos, struct search_info *info, int alpha, int beta, bool maximizingPlayer)
 {
 	int evaluation = evaluate(pos, info);
@@ -227,12 +227,19 @@ void moveOrdering(const struct position *pos, struct move moves[], size_t count)
 	qsort(moves, count, sizeof(struct move), compareMoveScore);
 }
 	
-struct search_result minimax(const struct position *pos, int depth, int alpha, int beta, struct search_info *info)
+struct search_result minimax(const struct position *pos, int depth, int alpha, int beta, struct search_info *info, double timeForSearch, int startTime, struct move bestMoves[])
 {
 	struct search_result result;
 	
 	result.score = pos->side_to_move == WHITE ? -1000000 : 1000000;
-	
+
+	int currentTime = clock();
+
+	if ((double)(currentTime - startTime) / CLOCKS_PER_SEC >= timeForSearch)
+	{
+		result.score = 0;
+		return result;
+	}
 	if (depth == 0)
 	{
 		result.score = evaluate(pos, info);
@@ -243,8 +250,24 @@ struct search_result minimax(const struct position *pos, int depth, int alpha, i
 	}
 	struct move moves[MAX_MOVES];
 	size_t count = generate_legal_moves(pos, moves);
+	
 	moveOrdering(pos, moves, count);
 
+	struct move bestPrevMove = bestMoves[depth];
+	if (bestPrevMove.from_square != 0 || bestPrevMove.to_square != 0)
+	{
+		for (size_t index = 0; index < count; index++)
+		{
+			if (moves[index].from_square == bestPrevMove.from_square &&
+				moves[index].to_square == bestPrevMove.to_square)
+			{
+				struct move temp = moves[0];
+				moves[0] = moves[index];
+				moves[index] = temp;
+				break;
+			}
+		}
+	}
 	for (size_t index = 0; index < count; index++)
 	{
 		struct position copy = *pos;
@@ -253,7 +276,7 @@ struct search_result minimax(const struct position *pos, int depth, int alpha, i
 
 		if (pos->side_to_move == WHITE)
 		{
-			score = minimax(&copy, depth - 1, alpha, beta, info).score;
+			score = minimax(&copy, depth - 1, alpha, beta, info, timeForSearch, startTime, bestMoves).score;
 			if (score > result.score)
 			{
 				result.move = moves[index];
@@ -264,7 +287,7 @@ struct search_result minimax(const struct position *pos, int depth, int alpha, i
 		}
 		else
 		{
-			score = minimax(&copy, depth - 1, alpha, beta, info).score;
+			score = minimax(&copy, depth - 1, alpha, beta, info, timeForSearch, startTime, bestMoves).score;
 			if (score < result.score)
 			{
 				result.move = moves[index];
@@ -279,22 +302,58 @@ struct search_result minimax(const struct position *pos, int depth, int alpha, i
 	return result;
 }
 
+double getTimeForSearch(struct search_info *info)
+{
+	double pieceRatio = (double)info->totalPieceValue / info->maxPieceValue;
+	double timeRatio = (double)info->time[info->pos->side_to_move] / info->maxTimePerSide;
+	// int increment = info->increment[info->pos->side_to_move];
+
+	// 🔹 **Opening (veel stukken, minder tijd per zet)**
+	if (pieceRatio > 0.8)
+		return (info->time[info->pos->side_to_move] / 50000.0);
+
+	// 🔹 **Middenspel (complexe zetten, meer tijd per zet)**
+	if (pieceRatio > 0.3)
+		return (info->time[info->pos->side_to_move] / 20000.0);
+
+	// 🔹 **Eindspel (snelle beslissingen, iets minder tijd per zet)**
+	if (timeRatio < 0.2)
+		return (info->time[info->pos->side_to_move] / 30000.0);
+
+	// 🔹 **Normale tijdsverdeling**
+	return (info->time[info->pos->side_to_move] / 50000.0);
+}
+
 struct move search(struct search_info *info)
 {
 	struct move bestMove;
-	int bestEval = -10000000;
 
-	int maxDepth = 7;
-	double timeForSearch = 10; //seconds
+	int maxDepth = 10;
+	// printf("%s\n", "check");
+	// info->time[0] = 300000;
+	// info->time[1] = 300000;
+	// double timeForSearch = getTimeForSearch(info);
+	double timeForSearch = 5;
+
+	// FILE *log_file = fopen("SEARCHLOGS.txt", "a");
+	// if (log_file)
+	// {
+	// 	fprintf(log_file, "%f\n", timeForSearch);
+	// 	fclose(log_file);
+	// }
+
+	struct move movePerDepth[maxDepth];
 
 	int startTime = clock();
-	for (int i = 0; i < maxDepth; i ++)
+	for (int i = 1; i < maxDepth; i ++)
 	{
-		struct search_result res = minimax(info->pos, i, -1000000, 1000000, info);
+		struct search_result res = minimax(info->pos, i, -1000000, 1000000, info, timeForSearch, startTime, movePerDepth);
+		int currentTime = clock();
+		if ((double)(currentTime - startTime) / CLOCKS_PER_SEC >= timeForSearch)
+			break;
+
 		bestMove = res.move;
-		int endTime = clock();
-		if ((double)(endTime - startTime) / CLOCKS_PER_SEC >= timeForSearch)
-			break ;
+		movePerDepth[i] = bestMove;
 	}
 	return bestMove;
 }

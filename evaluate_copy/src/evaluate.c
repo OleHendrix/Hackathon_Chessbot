@@ -9,16 +9,26 @@ static const int piece_value[6] = { 100, 320, 330, 500, 900, 1000000 };
 
 uint64_t compute_zobrist_hash(const struct position *pos)
 {
-	uint64_t hash = 0; 
+	uint64_t hash = 0;
 
 	for (int square = 0; square < 64; square++)
 	{
 		int piece = pos->board[square];
-
-		if (piece != NO_PIECE) // Als er een stuk staat
+		if (piece != NO_PIECE)
 		{
-			hash ^= pos->zobrist_table[piece][square]; 
+			hash ^= pos->zobrist_pieces[piece][square];
 		}
+	}
+
+	if (pos->side_to_move == WHITE)
+		hash ^= pos->zobrist_side;
+
+	hash ^= pos->zobrist_castling_white[pos->castling_rights[WHITE]];
+	hash ^= pos->zobrist_castling_black[pos->castling_rights[BLACK]];
+
+	if (pos->en_passant_square != NO_SQUARE)
+	{
+		hash ^= pos->zobrist_en_passant[pos->en_passant_square % 8];
 	}
 
 	return hash;
@@ -63,13 +73,24 @@ int evaluate(const struct position *pos, struct search_info *info)
 		}
 	}
 
-	info->evaluatedPositions++;
-
 	int evaluation = score[pos->side_to_move] - score[1 - pos->side_to_move];
 	store_in_hashmap(hash, evaluation);
 
 	info->evaluatedPositions++;
 	return evaluation;
+}
+
+int evaluateTotal(const struct position *pos)
+{
+	int score = 0;
+	for (int square = 0; square < 64; square++)
+	{
+		int piece = pos->board[square];
+
+		if (piece != NO_PIECE)
+			score += piece_value[TYPE(piece)];
+	}
+	return score;
 }
 
 // int moveToSquare = moves[i].to_square;

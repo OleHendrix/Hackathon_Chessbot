@@ -41,5 +41,5 @@
 /* https://www.chessprogramming.org/Piece-Square_Tables                      */
 /* https://www.chessprogramming.org/Mobility                                 */
 int evaluate(const struct position *pos, struct search_info *info);
-
+int evaluateTotal(const struct position *pos);
 #endif

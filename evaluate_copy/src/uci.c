@@ -3,6 +3,7 @@
 #include "move.h"
 #include "types.h"
 #include "evaluate.h" //rm later
+#include "position.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -98,10 +99,9 @@ static void uci_go(const struct position *pos, char *token, char *store) {
 	info.time[BLACK] = 0;
 	info.increment[WHITE] = 0;
 	info.increment[BLACK] = 0;
-	
-	info.evaluatedPositions = 0;
 
-	while ((token = get_token(token, store))) {
+	while ((token = get_token(token, store)))
+	{
 		if (!strcmp(token, "searchmoves")) {
 			break;
 		} else if (!strcmp(token, "ponder")) {
@@ -129,17 +129,24 @@ static void uci_go(const struct position *pos, char *token, char *store) {
 		}
 	}
 
-	clock_t starttime = clock(); 
-	// evaluate(pos, &info);
+
+	info.evaluatedPositions = 0;
+	// info.maxPieceValue = 2008000;
+	// info.maxTimePerSide = info.time[0];
+
+	// clock_t starttime = clock(); 
 	move = search(&info);
-	clock_t endtime = clock();
-	double search_time = ((double)(endtime - starttime)) / CLOCKS_PER_SEC * 1000;
-	FILE *log_file = fopen("SEARCHLOGS.txt", "a");
-	if (log_file)
-	{
-		fprintf(log_file, "Searchtime: %.2f ms\t%llu positions evaluated:\n", search_time, info.evaluatedPositions);
-		fclose(log_file);
-	}
+	// clock_t endtime = clock();
+	// double search_time = ((double)(endtime - starttime)) / CLOCKS_PER_SEC * 1000;
+	// FILE *log_file = fopen("SEARCHLOGS.txt", "a");
+	// if (log_file)
+	// {
+	// 	// fprintf(log_file, "%d\n", evaluateTotal(pos));
+	// 	fprintf(log_file, "%d\n", info.time[0]);
+	// 	// fprintf(log_file, "Searchtime: %.2f ms\t%llu positions evaluated:\n", search_time, info.evaluatedPositions);
+	// 	fclose(log_file);
+	// }
+	// info.totalPieceValue = evaluateTotal(pos);
 
 	buffer[0] = "abcdefgh"[FILE(move.from_square)];
 	buffer[1] = '1' + RANK(move.from_square);
@@ -155,13 +162,25 @@ static void uci_go(const struct position *pos, char *token, char *store) {
 
 void initZobristTable(struct position *pos)
 {
-	srand(time(NULL));
+	uint64_t seed = 123456789ULL; // Fixed seed for reproducibility
 
-	for (int piece = 0; piece < 12; piece++)
+	for (int piece = 0; piece < 12; ++piece)
 	{
-		for (int square = 0; square < 64; square++)
-			pos->zobrist_table[piece][square] = ((uint64_t)rand() << 32) | rand();
+		for (int square = 0; square < 64; ++square)
+			pos->zobrist_pieces[piece][square] = pseudoRandom(seed++);
 	}
+
+	for (int file = 0; file < 8; ++file)
+	{
+		pos->zobrist_en_passant[file] = pseudoRandom(seed++);
+	}
+
+	for (int i = 0; i < 4; ++i)
+	{
+		pos->zobrist_castling_white[i] = pseudoRandom(seed++);
+		pos->zobrist_castling_black[i] = pseudoRandom(seed++);
+	}
+	pos->zobrist_side = pseudoRandom(seed++);
 }
 
 void uci_run(const char *name, const char *author) {

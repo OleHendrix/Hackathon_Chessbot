@@ -13,9 +13,14 @@ struct search_info {
 	/* time in milliseconds for both players.                                */
 	int time[2];
 
+	int totaltime;
+
 	/* increment in milliseconds for both players.                           */
 	int increment[2];
 
+	int maxPieceValue;
+	int maxTimePerSide;
+	int totalPieceValue;
 	unsigned long long evaluatedPositions;
 };
 
@@ -110,42 +115,42 @@ struct search_result {
 /* https://www.chessprogramming.org/Move_Ordering                            */
 /* https://www.chessprogramming.org/Transposition_Table                      */
 /* https://www.chessprogramming.org/Quiescence_Search                        */
-struct search_result minimax(const struct position *pos, int depth, int alpha, int beta, struct search_info *info);
+struct search_result minimax(const struct position *pos, int depth, int alpha, int beta, struct search_info *info, double timeForSearch, int startTime, struct move bestMoves[]);
 
-/* the search function sets up the search parameters and calls `minimax` to  */
-/* starts searching. our basic implementation always starts a search at a    */
-/* fixed depth of 4.                                                         */
-/*                                                                           */
-/* POSSIBLE IMPROVEMENT: time management                                     */
-/* instead of always searching to a fixed depth, come up with a better       */
-/* strategy to effectively use your time. for example, when you are low on   */
-/* time you might want to search to a shallower depth.                       */
-/*                                                                           */
-/* POSSIBLE IMPROVEMENT: iterative deepening                                 */
-/* even if you know how much time you want to spend calculating your next    */
-/* move, how do you decide what depth to search at so that the search        */
-/* completes within the given time? the time it takes to search to a given   */
-/* depth depends on the number of legal moves in the position, the speed of  */
-/* the system the engine is running on, and other things. instead of trying  */
-/* to guess a good depth, you can start with some low depth, such as 2, and  */
-/* incrementally search higher depths when there is still time left. this    */
-/* might seem like it wastes a lot of time searching lower depths only to    */
-/* discard the result after searching a higher depth, but in practice this   */
-/* time is insignificant, because a search at even one depth higher takes an */
-/* order of magnitude longer to complete than all lower depths before it.    */
-/*                                                                           */
-/* POSSIBLE IMPROVEMENT: opening book                                        */
-/* a deterministic chess engine will always output the same move when given  */
-/* the same position. so instead of wasting time calculating the best move   */
-/* in the starting position, you can instead precalculate the best move and  */
-/* return it immediately. you can also precalculate moves for common         */
-/* openings (for example, what to do after 1. e4 e5?), and endgames.         */
-/*                                                                           */
-/* https://www.chessprogramming.org/Search                                   */
-/* https://www.chessprogramming.org/Time_Management                          */
-/* https://www.chessprogramming.org/Iterative_Deepening                      */
-/* https://www.chessprogramming.org/Opening_Book                             */
-struct move search(struct search_info *info);
+	/* the search function sets up the search parameters and calls `minimax` to  */
+	/* starts searching. our basic implementation always starts a search at a    */
+	/* fixed depth of 4.                                                         */
+	/*                                                                           */
+	/* POSSIBLE IMPROVEMENT: time management                                     */
+	/* instead of always searching to a fixed depth, come up with a better       */
+	/* strategy to effectively use your time. for example, when you are low on   */
+	/* time you might want to search to a shallower depth.                       */
+	/*                                                                           */
+	/* POSSIBLE IMPROVEMENT: iterative deepening                                 */
+	/* even if you know how much time you want to spend calculating your next    */
+	/* move, how do you decide what depth to search at so that the search        */
+	/* completes within the given time? the time it takes to search to a given   */
+	/* depth depends on the number of legal moves in the position, the speed of  */
+	/* the system the engine is running on, and other things. instead of trying  */
+	/* to guess a good depth, you can start with some low depth, such as 2, and  */
+	/* incrementally search higher depths when there is still time left. this    */
+	/* might seem like it wastes a lot of time searching lower depths only to    */
+	/* discard the result after searching a higher depth, but in practice this   */
+	/* time is insignificant, because a search at even one depth higher takes an */
+	/* order of magnitude longer to complete than all lower depths before it.    */
+	/*                                                                           */
+	/* POSSIBLE IMPROVEMENT: opening book                                        */
+	/* a deterministic chess engine will always output the same move when given  */
+	/* the same position. so instead of wasting time calculating the best move   */
+	/* in the starting position, you can instead precalculate the best move and  */
+	/* return it immediately. you can also precalculate moves for common         */
+	/* openings (for example, what to do after 1. e4 e5?), and endgames.         */
+	/*                                                                           */
+	/* https://www.chessprogramming.org/Search                                   */
+	/* https://www.chessprogramming.org/Time_Management                          */
+	/* https://www.chessprogramming.org/Iterative_Deepening                      */
+	/* https://www.chessprogramming.org/Opening_Book                             */
+	struct move search(struct search_info *info);
 void moveOrdering(const struct position *pos, struct move moves[], size_t count);
 
 #endif
