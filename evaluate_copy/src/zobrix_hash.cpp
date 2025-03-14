@@ -2,12 +2,6 @@
 #include <unordered_map> 
 #include <cstdint>
 
-uint64_t zobrist_pieces[12][64];	// [Piece type][Square]
-uint64_t zobrist_castling_white[4]; // 16 possible castling rights
-uint64_t zobrist_castling_black[4];
-uint64_t zobrist_en_passant[8]; // 8 possible en passant files
-uint64_t zobrist_side;
-
 std::unordered_map<uint64_t, int> zobrix_hash;
 
 uint64_t pseudoRandom(uint64_t seed)

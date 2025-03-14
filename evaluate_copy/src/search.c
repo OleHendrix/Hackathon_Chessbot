@@ -2,7 +2,6 @@
 #include "evaluate.h"
 #include "generate.h"
 #include "types.h"
-// #include "move_depth.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -250,9 +249,8 @@ struct search_result minimax(const struct position *pos, int depth, int alpha, i
 	}
 	struct move moves[MAX_MOVES];
 	size_t count = generate_legal_moves(pos, moves);
-	
 	moveOrdering(pos, moves, count);
-
+		
 	struct move bestPrevMove = bestMoves[depth];
 	if (bestPrevMove.from_square != 0 || bestPrevMove.to_square != 0)
 	{
@@ -302,45 +300,64 @@ struct search_result minimax(const struct position *pos, int depth, int alpha, i
 	return result;
 }
 
-double getTimeForSearch(struct search_info *info)
+double getTimeForSearch(struct search_info *info, struct position *pos)
 {
-	double pieceRatio = (double)info->totalPieceValue / info->maxPieceValue;
-	double timeRatio = (double)info->time[info->pos->side_to_move] / info->maxTimePerSide;
-	// int increment = info->increment[info->pos->side_to_move];
+	double pieceRatio = (double)info->totalPieceValue / (double)pos->maxPieceValue;
+	double timeRatio = (double)info->time[info->pos->side_to_move] / (double)pos->maxTimePerSide;
+	FILE *log_file = fopen("SEARCHLOGS.txt", "a");
+	if (log_file)
+	{
+		// fprintf(log_file, "Totalpiece %f\n", (double)info->totalPieceValue);
+		// fprintf(log_file, "MaxPiece %d\n", pos->maxPieceValue);
+		fprintf(log_file, "PieceRation %f\n", pieceRatio);
+		fprintf(log_file, "timeRatio %f\n", timeRatio);
+	}
 
-	// 🔹 **Opening (veel stukken, minder tijd per zet)**
-	if (pieceRatio > 0.8)
-		return (info->time[info->pos->side_to_move] / 50000.0);
+	//begingame, more pieces, quick thinking
+	if (timeRatio > 0.9)
+	{
+		fprintf(log_file, "Begingame\n");
+		fclose(log_file);
+		return (info->time[info->pos->side_to_move] / 70000.0);
+	}
 
-	// 🔹 **Middenspel (complexe zetten, meer tijd per zet)**
-	if (pieceRatio > 0.3)
-		return (info->time[info->pos->side_to_move] / 20000.0);
+	//midgame, more thinking
+	if (timeRatio > 0.3)
+	{
+		fprintf(log_file, "Midgame\n");
+		fclose(log_file);
+		return (info->time[info->pos->side_to_move] / 10000.0);
+	}
 
-	// 🔹 **Eindspel (snelle beslissingen, iets minder tijd per zet)**
-	if (timeRatio < 0.2)
-		return (info->time[info->pos->side_to_move] / 30000.0);
+	//endgame, not a lot of time left. Quick moves
+	if (timeRatio < 0.3)
+	{
+		fprintf(log_file, "Endgame\n");
+		fclose(log_file);
+		return (info->time[info->pos->side_to_move] / 70000.0);
+	}
 
-	// 🔹 **Normale tijdsverdeling**
+	fprintf(log_file, "Normal game, No Specific Time\n");
+	fclose(log_file);
+	//normal time
 	return (info->time[info->pos->side_to_move] / 50000.0);
 }
 
-struct move search(struct search_info *info)
+struct move search(struct search_info *info, struct position *pos)
 {
 	struct move bestMove;
 
 	int maxDepth = 10;
-	// printf("%s\n", "check");
 	// info->time[0] = 300000;
 	// info->time[1] = 300000;
-	// double timeForSearch = getTimeForSearch(info);
-	double timeForSearch = 5;
+	double timeForSearch = getTimeForSearch(info, pos);
 
-	// FILE *log_file = fopen("SEARCHLOGS.txt", "a");
-	// if (log_file)
-	// {
-	// 	fprintf(log_file, "%f\n", timeForSearch);
-	// 	fclose(log_file);
-	// }
+	FILE *log_file = fopen("SEARCHLOGS.txt", "a");
+	if (log_file)
+	{
+		fprintf(log_file, "Time available for search: %f\n", timeForSearch);
+		fclose(log_file);
+	}
 
 	struct move movePerDepth[maxDepth];
 
@@ -350,10 +367,19 @@ struct move search(struct search_info *info)
 		struct search_result res = minimax(info->pos, i, -1000000, 1000000, info, timeForSearch, startTime, movePerDepth);
 		int currentTime = clock();
 		if ((double)(currentTime - startTime) / CLOCKS_PER_SEC >= timeForSearch)
+		{
+			FILE *log_file = fopen("SEARCHLOGS.txt", "a");
+			if (log_file)
+			{
+				fprintf(log_file, "Best move used in depth: %d\n", i);
+				fprintf(log_file, "Positions evaluated: %llu\n\n", info->evaluatedPositions);
+				fclose(log_file);
+			}
 			break;
-
+		}
 		bestMove = res.move;
 		movePerDepth[i] = bestMove;
 	}
+
 	return bestMove;
 }

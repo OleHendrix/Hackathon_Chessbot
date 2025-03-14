@@ -4,7 +4,7 @@
 #include "position.h"
 #include "search.h"
 
-/* the evaluation function tries to determine the value of the current       */
+/* the evaluation fuction tries to determine the value of the current       */
 /* position for the current player. the greater the value, the better the    */
 /* position is for the current player. our basic implementation just sums    */
 /* the value of all pieces on the board. knights are worth more than pawns,  */

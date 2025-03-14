@@ -26,6 +26,7 @@
 /*                                                                           */
 /* https://www.chessprogramming.org/Board_Representation                     */
 /* https://www.chessprogramming.org/Bitboards                                */
+
 struct position
 {
 	/* pieces indexed by square. `NO_PIECE` is used for empty squares.       */
@@ -45,6 +46,9 @@ struct position
 	uint64_t zobrist_castling_black[4];
 	uint64_t zobrist_en_passant[8]; // 8 possible en passant files
 	uint64_t zobrist_side;
+
+	int maxTimePerSide;
+	int maxPieceValue;
 };
 
 /* print out information about the position. useful for debugging.           */

@@ -92,27 +92,3 @@ int evaluateTotal(const struct position *pos)
 	}
 	return score;
 }
-
-// int moveToSquare = moves[i].to_square;
-// int moveFromSquare = moves[i].from_square;
-// // int pieceType = pos->board[moveFromSquare];
-// int pieceValue = piece_value[pos->board[moveFromSquare]];
-
-//VOORDELEN
-
-// //andere steen wegspelen in verhouding met welke steen je dat doet
-// int captured = pos->board[moveToSquare];
-// if (captured != NO_PIECE) //check of dit klopt
-// 	moves[i].moveScore += 10 * (piece_value[captured] - pieceValue);
-
-// //of een pion de achterrij raakt en kan promoveren en naar welk type dit gebeurt
-// int promotionType = moves[i].promotion_type;
-// if (promotionType) //check of dit klopt
-// 	moves[i].moveScore += piece_value[promotionType];
-
-// //of je het centrum ermee bezet
-// if ((FILE(moveToSquare) == 3 || FILE(moveToSquare) == 4) && (RANK(moveToSquare) == 3 || RANK(moveToSquare) == 4))
-// 	moves[i].moveScore += 5 * pieceValue;
-
-// int availableMoveDifference = (int)(generate_legal_moves_per_piece_square(pos, moveToSquare) - generate_legal_moves_per_piece_square(pos, moveFromSquare));
-// moves[i].moveScore += (5 * availableMoveDifference);

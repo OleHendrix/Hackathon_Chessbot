@@ -4,6 +4,7 @@
 #include "types.h"
 #include "evaluate.h" //rm later
 #include "position.h"
+#include "zobrix_hash.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -89,9 +90,10 @@ static void uci_position(struct position *pos, char *token, char *store) {
 	}
 }
 
-static void uci_go(const struct position *pos, char *token, char *store) {
+static void uci_go(struct position *pos, char *token, char *store) {
 	struct search_info info;
 	struct move move;
+	static int first = 0;
 	char buffer[] = { '\0', '\0', '\0', '\0', '\0', '\0' };
 	
 	info.pos = pos;
@@ -128,25 +130,15 @@ static void uci_go(const struct position *pos, char *token, char *store) {
 			break;
 		}
 	}
-
+	if (!first)
+	{
+		pos->maxTimePerSide = info.time[pos->side_to_move];
+		first ++;
+	}
 
 	info.evaluatedPositions = 0;
-	// info.maxPieceValue = 2008000;
-	// info.maxTimePerSide = info.time[0];
-
-	// clock_t starttime = clock(); 
-	move = search(&info);
-	// clock_t endtime = clock();
-	// double search_time = ((double)(endtime - starttime)) / CLOCKS_PER_SEC * 1000;
-	// FILE *log_file = fopen("SEARCHLOGS.txt", "a");
-	// if (log_file)
-	// {
-	// 	// fprintf(log_file, "%d\n", evaluateTotal(pos));
-	// 	fprintf(log_file, "%d\n", info.time[0]);
-	// 	// fprintf(log_file, "Searchtime: %.2f ms\t%llu positions evaluated:\n", search_time, info.evaluatedPositions);
-	// 	fclose(log_file);
-	// }
-	// info.totalPieceValue = evaluateTotal(pos);
+	info.totalPieceValue = evaluateTotal(pos);
+	move = search(&info, pos);
 
 	buffer[0] = "abcdefgh"[FILE(move.from_square)];
 	buffer[1] = '1' + RANK(move.from_square);
@@ -189,6 +181,7 @@ void uci_run(const char *name, const char *author) {
 	struct position pos;
 
 	initZobristTable(&pos);
+	pos.maxPieceValue = 2008000;
 
 	while (!quit && (line = get_line(stdin))) {
 		char *token = line;

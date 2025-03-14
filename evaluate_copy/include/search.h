@@ -6,7 +6,9 @@
 #include "stdbool.h"
 
 /* information passed to the search function.                                */
-struct search_info {
+
+struct search_info
+{
 	/* a pointer to the position.                                            */
 	const struct position *pos;
 
@@ -18,8 +20,6 @@ struct search_info {
 	/* increment in milliseconds for both players.                           */
 	int increment[2];
 
-	int maxPieceValue;
-	int maxTimePerSide;
 	int totalPieceValue;
 	unsigned long long evaluatedPositions;
 };
@@ -150,7 +150,7 @@ struct search_result minimax(const struct position *pos, int depth, int alpha, i
 	/* https://www.chessprogramming.org/Time_Management                          */
 	/* https://www.chessprogramming.org/Iterative_Deepening                      */
 	/* https://www.chessprogramming.org/Opening_Book                             */
-	struct move search(struct search_info *info);
+struct move search(struct search_info *info, struct position *pos);
 void moveOrdering(const struct position *pos, struct move moves[], size_t count);
 
 #endif
